@@ -213,7 +213,7 @@ def get_task_failure_attachment(task_name, exc, task_id, args,
             "/task/{tid}".format(tid=task_id)
         )
 
-    if cbkwargs["username"]:
+    if cbkwargs["show_custom_username"]:
         username = cbkwargs.get("username", "{}@{}".format(platform.node(), task_name))
         attachment["username"] = username
 
