@@ -72,7 +72,10 @@ def slack_task_failure(**cbkwargs):
             attachment = get_task_failure_attachment(
                 self.name, exc, task_id, args, kwargs, einfo, **cbkwargs)
 
-            if attachment:
+            task_annotations = getattr(self.run, "__annotations__", {})
+            exceptions = task_annotations.get("ignore_exceptions", [])
+
+            if attachment and exc in exceptions:
                 post_to_slack(cbkwargs["webhook"], " ", attachment)
 
             return func(self, exc, task_id, args, kwargs, einfo)
