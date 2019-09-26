@@ -1,7 +1,8 @@
 """Celery state and task callbacks."""
-from functools import wraps
 import time
+from functools import wraps
 
+from .attachments import add_task_to_stopwatch
 from .attachments import get_beat_init_attachment
 from .attachments import get_broker_connect_attachment
 from .attachments import get_broker_disconnect_attachment
@@ -10,7 +11,6 @@ from .attachments import get_celery_startup_attachment
 from .attachments import get_task_failure_attachment
 from .attachments import get_task_prerun_attachment
 from .attachments import get_task_success_attachment
-from .attachments import add_task_to_stopwatch
 from .slack import post_to_slack
 
 
@@ -60,8 +60,8 @@ def slack_task_success(**cbkwargs):
 
 def slack_task_failure(**cbkwargs):
     """Wrap the app.Task.on_failure() method with this callback."""
-    def wrapper(func):
 
+    def wrapper(func):
         @wraps(func)
         def wrapped_func(self, exc, task_id, args, kwargs, einfo):
             """Post a message to slack for failed task completion.
@@ -74,8 +74,9 @@ def slack_task_failure(**cbkwargs):
 
             task_annotations = getattr(self.run, "__annotations__", {})
             exceptions = task_annotations.get("ignore_exceptions", [])
+            exc_is_ignored = any(isinstance(exc, exception) for exception in exceptions)
 
-            if attachment and exc in exceptions:
+            if attachment and not exc_is_ignored:
                 post_to_slack(cbkwargs["webhook"], " ", attachment)
 
             return func(self, exc, task_id, args, kwargs, einfo)
